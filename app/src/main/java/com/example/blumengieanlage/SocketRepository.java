@@ -2,13 +2,18 @@ package com.example.blumengieanlage;
 
 import android.os.Handler;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.concurrent.Executor;
 
 interface SocketCallback<T> {
     void onComplete(Result<T> result);
 }
 
-public class SocketRepository {
+public class SocketRepository implements Serializable {
 
     private final Executor executor;
     private final Handler resultHandler;
@@ -19,12 +24,28 @@ public class SocketRepository {
         this.resultHandler = resultHandler;
     }
 
-    public void makeSocketRequest(final SocketCallback<MyPi> socketCallback, final int iterations) {
+    public void makeOpenSocketRequest(final SocketCallback<MyPi> socketCallback, final Socket socket, final String address, final int port) {
         executor.execute( new Runnable()  {
             @Override
             public void run() {
                 try {
-                    Result<MyPi> result = openSocket(iterations);
+                    Result<MyPi> result = openSocket(socket,address,port);
+                    notifyResult(result, socketCallback);
+                } catch (Exception e) {
+                    Result<MyPi> errorResult = new Result.Error<>(e);
+                    notifyResult(errorResult, socketCallback);
+                }
+            }
+
+        });
+    }
+
+    public void makeCloseSocketRequest(final SocketCallback<MyPi> socketCallback, final Socket socket) {
+        executor.execute( new Runnable()  {
+            @Override
+            public void run() {
+                try {
+                    Result<MyPi> result = closeSocket(socket);
                     notifyResult(result, socketCallback);
                 } catch (Exception e) {
                     Result<MyPi> errorResult = new Result.Error<>(e);
@@ -47,36 +68,28 @@ public class SocketRepository {
         });
     }
 
-    public Result<MyPi> openSocket(int iterations)
+    private Result<MyPi> openSocket(Socket socket, String address, int port)
     {
         try {
-            MyPi res;
-            double pi = 0;
-            Boolean plus = true;
-
-            if (iterations < 1)
-            {
-                iterations = 1;
-            }
-
-            for (int i = 1; i <= (iterations*2); i=i+2) {
-                if(plus)
-                {
-                    pi = pi + (4.0/i);
-                    plus = false;
-                } else {
-                    pi = pi - (4.0/i);
-                    plus = true;
-                }
-            }
-
-
-
-            res = new MyPi(pi);
-
-            return new Result.Success<MyPi>(res);
-        } catch (Exception e) {
-            return new Result.Error<MyPi>(e);
+            socket = new Socket(InetAddress.getByName(address), port);
+        } catch (UnknownHostException eHost) {
+            System.out.println(eHost.getMessage());
+            return new Result.Error<>(eHost);
+        } catch (IOException eIo) {
+            System.out.println(eIo.getMessage());
+            return new Result.Error<>(eIo);
         }
+        return new Result.Success<MyPi>(new MyPi(3.14));
+    }
+
+    private Result<MyPi> closeSocket(Socket socket)
+    {
+        try {
+            socket.close();
+        } catch (IOException eIo) {
+            System.out.println(eIo.getMessage());
+            return new Result.Error<>(eIo);
+        }
+        return new Result.Success<MyPi>(new MyPi(3.14));
     }
 }

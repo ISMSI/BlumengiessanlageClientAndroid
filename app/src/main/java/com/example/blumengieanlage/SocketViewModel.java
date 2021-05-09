@@ -1,29 +1,40 @@
 package com.example.blumengieanlage;
 
+import android.content.Intent;
 import android.widget.TextView;
 
-public class SocketViewModel {
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.io.Serializable;
+import java.net.Socket;
+
+public class SocketViewModel implements Serializable {
 
     private final SocketRepository socketRepository;
+    Socket socket;
 
     public SocketViewModel(SocketRepository socketRepository) {
         this.socketRepository = socketRepository;
     }
 
-    public void makeSocketRequest(final TextView textView, int iterations) {
-        socketRepository.makeSocketRequest(new SocketCallback<MyPi>() {
+    public void makeOpenSocketRequest(final SocketCallback<MyPi> socketCallback, final AppCompatActivity mainActivity, final Intent requestIntent, final String address, final int port) {
+        socketRepository.makeOpenSocketRequest(socketCallback,
+                socket,
+                address,
+                port);
+    }
+
+    public void makeCloseSocketRequest() {
+        socketRepository.makeCloseSocketRequest(new SocketCallback<MyPi>() {
             @Override
             public void onComplete(Result<MyPi> result) {
                 if (result instanceof Result.Success) {
-                    MyPi pi = ((Result.Success<MyPi>) result).data;
-
-
-                    textView.setText(Double.toString(pi.getPi()));
+                   System.out.println("Disconnected");
                 } else {
-                    textView.setText("Error");
+                   System.out.println("Disconnected error");
                 }
             }
         },
-                iterations);
+                socket);
     }
 }

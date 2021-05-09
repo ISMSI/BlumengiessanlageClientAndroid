@@ -1,6 +1,8 @@
 package com.example.blumengieanlage;
 
-public class MyPi {
+import java.io.Serializable;
+
+public class MyPi implements Serializable {
 
     private double pi;
 
