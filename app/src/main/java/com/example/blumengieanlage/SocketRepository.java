@@ -19,16 +19,16 @@ public class SocketRepository {
         this.resultHandler = resultHandler;
     }
 
-    public void makeSocketRequest( final SocketCallback<MyPi> socketCallback) {
+    public void makeSocketRequest(final SocketCallback<MyPi> socketCallback, final int iterations) {
         executor.execute( new Runnable()  {
             @Override
             public void run() {
                 try {
-                    Result<MyPi> result = openSocket();
-                    socketCallback.onComplete(result);
+                    Result<MyPi> result = openSocket(iterations);
+                    notifyResult(result, socketCallback);
                 } catch (Exception e) {
                     Result<MyPi> errorResult = new Result.Error<>(e);
-                    socketCallback.onComplete(errorResult);
+                    notifyResult(errorResult, socketCallback);
                 }
             }
 
@@ -47,20 +47,25 @@ public class SocketRepository {
         });
     }
 
-    public Result<MyPi> openSocket()
+    public Result<MyPi> openSocket(int iterations)
     {
         try {
             MyPi res;
             double pi = 0;
             Boolean plus = true;
 
-            for (int i = 1; i < 500000; i=i+2) {
+            if (iterations < 1)
+            {
+                iterations = 1;
+            }
+
+            for (int i = 1; i <= (iterations*2); i=i+2) {
                 if(plus)
                 {
-                    pi = pi + (4/i);
+                    pi = pi + (4.0/i);
                     plus = false;
                 } else {
-                    pi = pi - (4/i);
+                    pi = pi - (4.0/i);
                     plus = true;
                 }
             }
