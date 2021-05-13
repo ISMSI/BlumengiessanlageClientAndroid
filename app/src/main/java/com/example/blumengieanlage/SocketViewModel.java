@@ -37,10 +37,11 @@ public class SocketViewModel extends AndroidViewModel {
     }
 
     public void makeOpenSocketRequest(final String address, final int port) {
-        socketRepository.makeOpenSocketRequest(new SocketCallback<MyPi>() {
+        socketRepository.makeOpenSocketRequest(new SocketCallback<MySocket>() {
             @Override
-            public void onComplete(Result<MyPi> result) {
+            public void onComplete(Result<MySocket> result) {
                 if (result instanceof Result.Success) {
+                    socket = ((Result.Success<MySocket>) result).data.getSocket();
                     System.out.println("Connected");
                     connected.postValue(new MyPi(1));
 
@@ -55,9 +56,9 @@ public class SocketViewModel extends AndroidViewModel {
     }
 
     public void makeCloseSocketRequest() {
-        socketRepository.makeCloseSocketRequest(new SocketCallback<MyPi>() {
+        socketRepository.makeCloseSocketRequest(new SocketCallback<MySocket>() {
             @Override
-            public void onComplete(Result<MyPi> result) {
+            public void onComplete(Result<MySocket> result) {
                 if (result instanceof Result.Success) {
                     System.out.println("Disconnected");
                 } else {
