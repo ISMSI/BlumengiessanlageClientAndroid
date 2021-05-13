@@ -13,7 +13,7 @@ public class RequestActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_request);
-        socketViewModel = (SocketViewModel) getIntent().getSerializableExtra("socketViewModel");
+        socketViewModel = new SocketViewModel(getApplication());
 
     }
 

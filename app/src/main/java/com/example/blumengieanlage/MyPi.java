@@ -2,7 +2,7 @@ package com.example.blumengieanlage;
 
 import java.io.Serializable;
 
-public class MyPi implements Serializable {
+public class MyPi {
 
     private double pi;
 

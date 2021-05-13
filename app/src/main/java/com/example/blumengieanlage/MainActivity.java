@@ -2,7 +2,10 @@ package com.example.blumengieanlage;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.os.HandlerCompat;
+import androidx.lifecycle.Observer;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,27 +21,33 @@ import java.util.concurrent.Executors;
 
 
 public class MainActivity extends AppCompatActivity {
-    AppCompatActivity mainActivity = this;
-    ExecutorService executorService = Executors.newFixedThreadPool(1);
-    Handler mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
-    SocketRepository socketRepository = new SocketRepository(executorService,mainThreadHandler);
-    SocketViewModel socketViewModel = new SocketViewModel(socketRepository);
-
-    Intent requestIntent;
-
-
+    SocketViewModel socketViewModel;
+    Context myContext = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        socketViewModel = new SocketViewModel(getApplication());
+
+        final Observer<MyPi> myPiObserver = new Observer<MyPi>() {
+            @Override
+            public void onChanged(MyPi myPi) {
+                if (myPi.getPi() == 1)
+                {
+                    Intent intent = new Intent(myContext, RequestActivity.class);
+                    startActivity(intent);
+                }
+            }
+        };
+
+        socketViewModel.connected.observe(this, myPiObserver);
+
         setContentView(R.layout.activity_main);
 
         final Button clientOpen = findViewById( R.id.clientOpen);
         final TextView portField = findViewById(R.id.port);
         final TextView ipAdresseField = findViewById(R.id.ip_adresse);
-
-        requestIntent = new Intent(this, RequestActivity.class);
-        requestIntent.putExtra("socketViewModel", socketViewModel);
 
         clientOpen.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -51,19 +60,8 @@ public class MainActivity extends AppCompatActivity {
                     port = 3131;
                 }
 
-                SocketCallback<MyPi> socketCallback = new SocketCallback<MyPi>() {
-                    @Override
-                    public void onComplete(Result<MyPi> result) {
-                        if (result instanceof Result.Success) {
-                            System.out.println("Connected");
-                            mainActivity.startActivity(requestIntent);
-                        } else {
-                            System.out.println("Connection error");
-                        }
-                    }
-                };
 
-                socketViewModel.makeOpenSocketRequest(socketCallback, mainActivity, requestIntent, ipAdresseField.getText().toString(), port);
+                socketViewModel.makeOpenSocketRequest(ipAdresseField.getText().toString(), port);
             }
         });
 
